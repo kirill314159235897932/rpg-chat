@@ -3,6 +3,7 @@ const server = new WebSocket.Server({ port: process.env.PORT || 8080 });
 
 let clients = [];
 let messageHistory = [];
+let userPrivileges = {};
 
 server.on('connection', (ws) => {
     console.log('Новый игрок подключился');
@@ -16,12 +17,36 @@ server.on('connection', (ws) => {
         try {
             const data = JSON.parse(message);
             
+            // Обновление привилегии
+            if (data.type === 'update_privilege') {
+                userPrivileges[data.name] = {
+                    badge: data.badge,
+                    color: data.color
+                };
+                console.log(`👑 Обновлена привилегия для ${data.name}: ${data.badge}`);
+                return;
+            }
+            
+            // Обычное сообщение
+            const privilege = userPrivileges[data.name] || null;
+            
+            let formattedName = data.name;
+            if (privilege) {
+                if (privilege.color === 'rainbow') {
+                    formattedName = `${privilege.badge} <span style="background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet); -webkit-background-clip: text; background-clip: text; color: transparent;">${data.name}</span> ${privilege.badge}`;
+                } else {
+                    formattedName = `${privilege.badge} <span style="color: ${privilege.color};">${data.name}</span> ${privilege.badge}`;
+                }
+            }
+            
             const chatMessage = {
                 type: 'message',
-                name: data.name,
+                name: formattedName,
                 text: data.text,
                 time: new Date().toLocaleTimeString(),
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                rawName: data.name,
+                privilege: privilege
             };
             
             messageHistory.push(chatMessage);
