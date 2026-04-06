@@ -17,7 +17,6 @@ server.on('connection', (ws) => {
         try {
             const data = JSON.parse(message);
             
-            // Обновление привилегии
             if (data.type === 'update_privilege') {
                 userPrivileges[data.name] = {
                     badge: data.badge,
@@ -27,7 +26,6 @@ server.on('connection', (ws) => {
                 return;
             }
             
-            // Обычное сообщение
             const privilege = userPrivileges[data.name] || null;
             
             let formattedName = data.name;
